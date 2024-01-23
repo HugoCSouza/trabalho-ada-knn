@@ -1,9 +1,4 @@
-class knn():
-    def __init__(self, path_bd: str):
-        print('Começou!')
-        self.database = self.tratamento_dados(path_bd)
-        
-    def tratamento_dados(self, arquivo):
+def tratamento_dados(arquivo):
         # Inicialização da variáveis
         variables = dict()
         # Manipulação do Arquivos
@@ -29,8 +24,21 @@ class knn():
         print("Banco de dados tratado!")
         return variables
 
-def normalizacao():
-    pass
+class knn():
+    def __init__(self, path_bd: str):
+        print('Começou!')
+        self.database = tratamento_dados(path_bd)
+        
+    def normalizacao(self):
+        # Encontrar o valor mínimo e máximo na lista
+        for variable, values in self.database.items():
+            
+            valor_minimo = min(values)
+            valor_maximo = max(values)
+
+            # Normalizar os valores utilizando a fórmula (x - min) / (max - min)
+            valores_normalizados = [(x - valor_minimo) / (valor_maximo - valor_minimo) for x in values]
+            self.database[variable] = valores_normalizados
 
 def a():
     pass
@@ -47,3 +55,5 @@ def a():
 
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo)
+modelo_knn.normalizacao()
+print(modelo_knn.database)
