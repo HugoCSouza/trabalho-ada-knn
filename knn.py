@@ -24,10 +24,32 @@ def tratamento_dados(arquivo):
         print("Banco de dados tratado!")
         return variables
 
+def transform_data_points(variables):
+    # Adquire a lista de nomes de variaveis 
+    keys_list = variables.keys()
+    size_points = 99999999999999
+    # Verifica que variavel tem o menor numero de pontos para não haver ponto sem valores
+    for key in keys_list:
+        size_variable = len(variables[key])
+        if size_variable < size_points:
+            size_points = size_variable
+    points = []
+    #Itera por todos os valores das variáveis, fazendo com que seja criada uma tupla com cada ponto
+    for i in range(size_points):
+        actual_point = list()
+        for key in keys_list:
+            list_values = variables[key]
+            actual_point.append(list_values[i])
+        points.append(tuple(actual_point))
+    # Retorna o conjunto de pontos para verificação
+    return points
+            
+    
 class knn():
     def __init__(self, path_bd: str):
         print('Começou!')
         self.database = tratamento_dados(path_bd)
+        self.points = transform_data_points(self.database)
         
     def normalizacao(self):
         # Encontrar o valor mínimo e máximo na lista
@@ -39,9 +61,10 @@ class knn():
             # Normalizar os valores utilizando a fórmula (x - min) / (max - min)
             valores_normalizados = [(x - valor_minimo) / (valor_maximo - valor_minimo) for x in values]
             self.database[variable] = valores_normalizados
+            
+    
 
-def a():
-    pass
+        
 
 ## Entrada de dados
 
@@ -56,4 +79,3 @@ def a():
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo)
 modelo_knn.normalizacao()
-print(modelo_knn.database)
