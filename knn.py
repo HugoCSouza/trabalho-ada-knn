@@ -47,9 +47,12 @@ def transform_data_points(variables):
     return points
 
 def distance_points(point1, point2, weight = 2):
+    #Calcula a distancia euclidiana como padrão, e modificando o peso conforme requerido.
     all_distances = [abs(value_point1 - value_point2) ** weight for value_point1, value_point2 in zip(point1, point2)]
     distance_euclidian = (sum(all_distances)) ** (1/weight)
     return distance_euclidian
+
+
             
     
 class knn():
@@ -81,8 +84,30 @@ class knn():
         return list_train, list_test
     
     def test(self):
+        # Inicia a variável de contagem de acertos e itera sobre todos os pontos de teste
+        right = 0
         for point in self.datatest:
-            print(point[:-1])
+            index_neighbours = self.discover_neighbours(point[:-1])
+            #Verifica a resposta de cada K vizinhos mais próximos e ve qual tem a maior quantidade
+            response_neighbours = [self.datatrain[index][-1] for index in index_neighbours]
+            group = max(set(response_neighbours), key=response_neighbours.count)
+            if group == point[-1]:
+                right += 1
+        #Calcula a acurácia
+        accuracy = round(100 * right/len(self.datatest), 2)
+        print(f'O modelo apresentou um percentagem de acurácia igual á {accuracy} %')
+        
+            
+    def discover_neighbours(self, point):
+        #Calcula a distancia entre o ponto de teste e os pontos de treino e salva em uma lista com o indice e o valor da distancia
+        distances_point_test = []
+        for index_train, point_train in enumerate(self.datatrain):
+            distances_point_test.append([index_train, distance_points(point, point_train[:-1])])
+        #Ordena a lista de distancia e seleciona os K vizinhos mais próximos
+        list_k_neighbours = sorted(distances_point_test, key = lambda x:x[1])
+        return [x[0] for x in list_k_neighbours[0:self.neighbours]]
+        
+        
             
         
         
@@ -106,6 +131,6 @@ class knn():
 
 
 caminho_arquivo = 'bd\diabetes.csv'
-modelo_knn = knn(caminho_arquivo, percent_data_train=0.5)
+modelo_knn = knn(caminho_arquivo, percent_data_train=0.7, neighbours= 7)
 modelo_knn.normalizacao()
 modelo_knn.test()
