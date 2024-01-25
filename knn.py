@@ -1,3 +1,5 @@
+import random
+
 def tratamento_dados(arquivo):
         # Inicialização da variáveis
         variables = dict()
@@ -46,10 +48,11 @@ def transform_data_points(variables):
             
     
 class knn():
-    def __init__(self, path_bd: str):
+    def __init__(self, path_bd: str, percent_data_train = 0.7):
         print('Começou!')
         self.database = tratamento_dados(path_bd)
         self.points = transform_data_points(self.database)
+        self.datatrain, self.datatest = self.divide_data(percent_data_train)
         
     def normalizacao(self):
         # Encontrar o valor mínimo e máximo na lista
@@ -61,6 +64,16 @@ class knn():
             # Normalizar os valores utilizando a fórmula (x - min) / (max - min)
             valores_normalizados = [(x - valor_minimo) / (valor_maximo - valor_minimo) for x in values]
             self.database[variable] = valores_normalizados
+            
+    def divide_data(self, percent_train):
+        size_data = len(self.points)
+        list_train = random.sample(self.points,int(size_data*percent_train))
+        list_test = [point for point in self.points if point not in list_train]
+        print(f"Os dados de treino terá tamanho de {len(list_train)} elementos e os dados de teste terá tamanho de {len(list_test)} elementos")
+        return list_train, list_test
+        
+        
+            
             
     
 
@@ -77,5 +90,5 @@ class knn():
 
 
 caminho_arquivo = 'bd\diabetes.csv'
-modelo_knn = knn(caminho_arquivo)
+modelo_knn = knn(caminho_arquivo, percent_data_train=0.5)
 modelo_knn.normalizacao()
