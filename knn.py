@@ -45,11 +45,18 @@ def transform_data_points(variables):
         points.append(tuple(actual_point))
     # Retorna o conjunto de pontos para verificação
     return points
+
+def distance_points(point1, point2, weight = 2):
+    all_distances = [abs(value_point1 - value_point2) ** weight for value_point1, value_point2 in zip(point1, point2)]
+    distance_euclidian = (sum(all_distances)) ** (1/weight)
+    return distance_euclidian
             
     
 class knn():
-    def __init__(self, path_bd: str, percent_data_train = 0.7):
+    def __init__(self, path_bd: str, percent_data_train = 0.7, weight_euclidian = 2, neighbours = 3):
         print('Começou!')
+        self.weight_euclidian = weight_euclidian
+        self.neighbours = neighbours
         self.database = tratamento_dados(path_bd)
         self.points = transform_data_points(self.database)
         self.datatrain, self.datatest = self.divide_data(percent_data_train)
@@ -67,10 +74,19 @@ class knn():
             
     def divide_data(self, percent_train):
         size_data = len(self.points)
+        #Seleciona uma amostra aleatória de pontos e seleciona os valores que não está na lista para treino
         list_train = random.sample(self.points,int(size_data*percent_train))
         list_test = [point for point in self.points if point not in list_train]
         print(f"Os dados de treino terá tamanho de {len(list_train)} elementos e os dados de teste terá tamanho de {len(list_test)} elementos")
         return list_train, list_test
+    
+    def test(self):
+        for point in self.datatest:
+            print(point[:-1])
+            
+        
+        
+        
         
         
             
@@ -92,3 +108,4 @@ class knn():
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo, percent_data_train=0.5)
 modelo_knn.normalizacao()
+modelo_knn.test()
