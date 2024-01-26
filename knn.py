@@ -60,9 +60,10 @@ class knn():
         print('Começou!')
         self.weight_euclidian = weight_euclidian
         self.neighbours = neighbours
+        self.percent_data_train = percent_data_train
         self.database = tratamento_dados(path_bd)
         self.points = transform_data_points(self.database)
-        self.datatrain, self.datatest = self.divide_data(percent_data_train)
+        self.datatrain, self.datatest = self.divide_data()
         
     def normalizacao(self):
         # Encontrar o valor mínimo e máximo na lista
@@ -74,28 +75,28 @@ class knn():
             # Normalizar os valores utilizando a fórmula (x - min) / (max - min)
             valores_normalizados = [(x - valor_minimo) / (valor_maximo - valor_minimo) for x in values]
             self.database[variable] = valores_normalizados
+        self.points = transform_data_points(self.database)
+        self.datatrain, self.datatest = self.divide_data()
             
-    def divide_data(self, percent_train):
+            
+    def divide_data(self):
         size_data = len(self.points)
         #Seleciona uma amostra aleatória de pontos e seleciona os valores que não está na lista para treino
-        list_train = random.sample(self.points,int(size_data*percent_train))
+        list_train = random.sample(self.points,int(size_data*self.percent_data_train))
         list_test = [point for point in self.points if point not in list_train]
         print(f"Os dados de treino terá tamanho de {len(list_train)} elementos e os dados de teste terá tamanho de {len(list_test)} elementos")
         return list_train, list_test
     
     def test(self):
-        # Inicia a variável de contagem de acertos e itera sobre todos os pontos de teste
-        right = 0
+        # Salva no Y de previsão na lista
+        y_pred = list()
         for point in self.datatest:
             index_neighbours = self.discover_neighbours(point[:-1])
             #Verifica a resposta de cada K vizinhos mais próximos e ve qual tem a maior quantidade
             response_neighbours = [self.datatrain[index][-1] for index in index_neighbours]
             group = max(set(response_neighbours), key=response_neighbours.count)
-            if group == point[-1]:
-                right += 1
-        #Calcula a acurácia
-        accuracy = round(100 * right/len(self.datatest), 2)
-        print(f'O modelo apresentou um percentagem de acurácia igual á {accuracy} %')
+            y_pred.append(group)
+        return y_pred
         
             
     def discover_neighbours(self, point):
@@ -107,8 +108,38 @@ class knn():
         list_k_neighbours = sorted(distances_point_test, key = lambda x:x[1])
         return [x[0] for x in list_k_neighbours[0:self.neighbours]]
         
+    def confusion_matrix(self):
+        y_real = [point[-1] for point in self.datatest]
+        y_pred = self.test()
+        tp, fp, tn, fn = 0, 0, 0, 0
         
+        for real, pred in zip(y_real, y_pred):
+            if real == 1 and pred == 1:
+                tp += 1
+            elif real == 0 and pred == 1:
+                fp += 1
+            elif real == 0 and pred == 0:
+                tn += 1
+            elif real == 1 and pred == 0:
+                fn += 1
+        
+        sensitivity = tp / (tp + fn)
+        specificity = tn / (tn + fp)
+        accuracy = (tp + tn) / (tp + tn + fp + fn)
+        precision = tp / (tp + fp)
+        negative_predictive_value = tn / (tn + fn)
+        
+        print(f"{'Matriz de Confusão':^50}")
+        print()
+        print(f"{'True v Pred >':<15}|{'Positivo':^10}|{'Negativo':^10}|")
+        print("-" * 50)
+        print(f"{'Positivo':<15}|{tp:^10}|{fn:^10}|{sensitivity:^10.2f}")
+        print("-" * 50)
+        print(f"{'Negativo':<15}|{fp:^10}|{tn:^10}|{specificity:^10.2f}")
+        print("-" * 50)
+        print(f"{' ':<15}|{precision:^10.2f}|{negative_predictive_value:^10.2f}|{accuracy:^10.2f}")
             
+                
         
         
         
@@ -132,5 +163,7 @@ class knn():
 
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo, percent_data_train=0.7, neighbours= 7)
+modelo_knn.test()
 modelo_knn.normalizacao()
 modelo_knn.test()
+modelo_knn.confusion_matrix()
