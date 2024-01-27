@@ -184,15 +184,15 @@ class knn():
         print("Começo do Fitting")
         print('-'*150)
         best_acc = 0
-        for type in range(3):
+        for type in range(2):
             self.database = tratamento_dados(self.path_bd)
             if type == 1:
                 self.database = self.normalizacao()
             elif type == 2:
                 self.database = self.normalizacao(type='zscore')
-            for percent_data in range(0,99,5):
+            for percent_data in range(0,99,10):
                 percent_data = percent_data * 0.01
-                print('')
+                print('\n \n \n')
                 if percent_data != 0:
                     self.percent_data_train = percent_data
                     self.datatrain, self.datatest = self.divide_data(print_informations = False)
@@ -207,9 +207,21 @@ class knn():
                                 best_percent = self.percent_data_train
                                 best_acc = acc
                                 best_neighbours = self.neighbours
+                                best_weight = self.weight_euclidian
+                                best_type = type
                         
-                
-        print(f"O melhor valor de acurácia foi atingido com a divisão de dados com tamanho de {best_percent*100:.2f}% e quantidade de vizinhos igual á {best_neighbours}. \
+        if best_type == 0:
+            str_type = 'Sem Normalizar'       
+        elif best_type == 1:
+            str_type = 'Normalização Max-Min'
+        elif best_type == 2:
+            str_type = 'Normalização Z-Score'
+            
+        print(f"O melhor valor de acurácia foi atingido com os seguinte valores \n \
+            Divisão dos dados: {best_percent*100:.2f}% \n \
+            Quantidade de vizinhos: {best_neighbours}. \n \
+            Peso da distancia euclidiana: {best_weight} \n \
+            Tipo de normalização: {best_type} \n \
             A accurácia atingida foi de {best_acc*100:.2f}%")
                 
             
