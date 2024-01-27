@@ -65,18 +65,34 @@ class knn():
         self.points = transform_data_points(self.database)
         self.datatrain, self.datatest = self.divide_data()
         
-    def normalizacao(self):
-        # Encontrar o valor mínimo e máximo na lista
-        for variable, values in self.database.items():
-            
-            valor_minimo = min(values)
-            valor_maximo = max(values)
+    def normalizacao(self, type = "minmax"):
+        if type == "minmax":
+            # Encontrar o valor mínimo e máximo na lista
+            for variable, values in self.database.items():
+                if variable.lower() != 'outcome':
+                    valor_minimo = min(values)
+                    valor_maximo = max(values)
 
-            # Normalizar os valores utilizando a fórmula (x - min) / (max - min)
-            valores_normalizados = [(x - valor_minimo) / (valor_maximo - valor_minimo) for x in values]
-            self.database[variable] = valores_normalizados
-        self.points = transform_data_points(self.database)
-        self.datatrain, self.datatest = self.divide_data()
+                    # Normalizar os valores utilizando a fórmula (x - min) / (max - min)
+                    valores_normalizados = [(x - valor_minimo) / (valor_maximo - valor_minimo) for x in values]
+                    self.database[variable] = valores_normalizados
+                    
+            self.points = transform_data_points(self.database)
+            self.datatrain, self.datatest = self.divide_data()
+        elif type == "zscore":
+            # Encontrar o valor mínimo e máximo na lista
+            for variable, values in self.database.items():
+                if variable.lower() != 'outcome':
+                    n = len(values)
+                    mean = sum(values)/n
+                    std = (sum([(x - mean)**2 for x in values]) / n) ** (1/2)
+                    # Normalizar os valores utilizando a fórmula (x - min) / (max - min)
+                    valores_normalizados = [(x - mean) / std for x in values]
+                    self.database[variable] = valores_normalizados
+            
+            self.points = transform_data_points(self.database)
+            self.datatrain, self.datatest = self.divide_data()
+        
             
             
     def divide_data(self):
@@ -163,7 +179,7 @@ class knn():
 
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo, percent_data_train=0.7, neighbours= 7)
-modelo_knn.test()
-modelo_knn.normalizacao()
+#modelo_knn.test()
+modelo_knn.normalizacao(type="zscore")
 modelo_knn.test()
 modelo_knn.confusion_matrix()
