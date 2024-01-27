@@ -143,7 +143,7 @@ class knn():
         y_real = [point[-1] for point in self.datatest]
         y_pred = self.test()
         tp, fp, tn, fn = 0, 0, 0, 0
-        
+        #Verifica os Positivos Verdadeiros e Falsos e idem Negativos
         for real, pred in zip(y_real, y_pred):
             if real and pred:
                 tp += 1
@@ -175,7 +175,7 @@ class knn():
             print(f"Specificity: {specificity:>20.2f}")
             print(f"Precision: {precision:>22.2f}")
             print(f"Negative Predictive Value: {negative_predictive_value:>6.2f}")
-            print(f"Accurrancy: {accuracy:>21.2f}")
+            print(f"Acurácia: {accuracy:>21.2f}")
             print('\n' * 3)
         
         return accuracy
