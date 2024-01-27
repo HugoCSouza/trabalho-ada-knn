@@ -15,13 +15,21 @@ def tratamento_dados(arquivo):
                     for variable in elements:
                         variables[variable] = []   
         
-        # Verifica se todos os valores são numericos 
+        
         for variable in variables:
             values_list = variables[variable]
-            check_all_values = all([value.replace('.','').isnumeric() for value in values_list])
-            # Se todos os valores forem numéricos, substitui a lista por uma tratada
-            if check_all_values:
+            # Verifica se todos os valores são numericos 
+            if all([value.replace('.','').isnumeric() for value in values_list]):
                 converted_list = tuple(map(float, values_list))
+                # Verifica se todos os valores são 0 ou 1
+                if all([(value == True or value == False) for value in converted_list]):
+                    converted_list = tuple(map(bool, converted_list))
+                    variables[variable] = converted_list
+                else:
+                    variables[variable] = converted_list
+            # Se não cumprir nenhum do dois requisitos deixa como está, só convertendo em tupla
+            else:
+                converted_list = tuple(map(str, values_list))
                 variables[variable] = converted_list
         print("Banco de dados tratado!")
         return variables
@@ -51,6 +59,8 @@ def distance_points(point1, point2, weight = 2):
     all_distances = [abs(value_point1 - value_point2) ** weight for value_point1, value_point2 in zip(point1, point2)]
     distance_euclidian = (sum(all_distances)) ** (1/weight)
     return distance_euclidian
+
+
 
 
             
@@ -130,13 +140,13 @@ class knn():
         tp, fp, tn, fn = 0, 0, 0, 0
         
         for real, pred in zip(y_real, y_pred):
-            if real == 1 and pred == 1:
+            if real and pred:
                 tp += 1
-            elif real == 0 and pred == 1:
+            elif (not real) and pred:
                 fp += 1
-            elif real == 0 and pred == 0:
+            elif (not real) and (not pred):
                 tn += 1
-            elif real == 1 and pred == 0:
+            elif real and (not pred):
                 fn += 1
         
         sensitivity = tp / (tp + fn)
@@ -147,13 +157,19 @@ class knn():
         
         print(f"{'Matriz de Confusão':^50}")
         print()
-        print(f"{'True v Pred >':<15}|{'Positivo':^10}|{'Negativo':^10}|")
-        print("-" * 50)
-        print(f"{'Positivo':<15}|{tp:^10}|{fn:^10}|{sensitivity:^10.2f}")
-        print("-" * 50)
-        print(f"{'Negativo':<15}|{fp:^10}|{tn:^10}|{specificity:^10.2f}")
-        print("-" * 50)
-        print(f"{' ':<15}|{precision:^10.2f}|{negative_predictive_value:^10.2f}|{accuracy:^10.2f}")
+        print(f"{'True v Pred >':<15}|{'Positivo':^10}|{'Negativo':^10}")
+        print("-" * 37)
+        print(f"{'Positivo':<15}|{tp:^10}|{fn:^10}")
+        print("-" * 37)
+        print(f"{'Negativo':<15}|{fp:^10}|{tn:^10}")
+        print("-" * 37)
+        print(f"Sensitivity: {sensitivity:>20.2f}")
+        print(f"Specificity: {specificity:>20.2f}")
+        print(f"Precision: {precision:>22.2f}")
+        print(f"Negative Predictive Value: {negative_predictive_value:>6.2f}")
+        print(f"Accurrancy: {accuracy:>21.2f}")
+        print('\n' * 3)
+        
             
                 
         
@@ -179,7 +195,17 @@ class knn():
 
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo, percent_data_train=0.7, neighbours= 7)
-#modelo_knn.test()
+print('Sem normalização!')
+print('-'*100)
+modelo_knn.test()
+modelo_knn.confusion_matrix()
+print('Normalização Min-Max')
+print('-'*100)
+modelo_knn.normalizacao()
+modelo_knn.test()
+modelo_knn.confusion_matrix()
+print('Normalização Zscore')
+print('-'*100)
 modelo_knn.normalizacao(type="zscore")
 modelo_knn.test()
 modelo_knn.confusion_matrix()
