@@ -105,12 +105,16 @@ class knn():
         
             
             
-    def divide_data(self):
+    def divide_data(self, print_informations = True):
         size_data = len(self.points)
         #Seleciona uma amostra aleatória de pontos e seleciona os valores que não está na lista para treino
         list_train = random.sample(self.points,int(size_data*self.percent_data_train))
         list_test = [point for point in self.points if point not in list_train]
-        print(f"Os dados de treino terá tamanho de {len(list_train)} elementos e os dados de teste terá tamanho de {len(list_test)} elementos")
+        if len(list_test) == 0 or len(list_train) == 0:
+            print('Não foi possivel dividir os dados')
+            return [], []
+        if print_informations:
+            print(f"Os dados de treino terá tamanho de {len(list_train)} elementos e os dados de teste terá tamanho de {len(list_test)} elementos")
         return list_train, list_test
     
     def test(self):
@@ -132,9 +136,9 @@ class knn():
             distances_point_test.append([index_train, distance_points(point, point_train[:-1])])
         #Ordena a lista de distancia e seleciona os K vizinhos mais próximos
         list_k_neighbours = sorted(distances_point_test, key = lambda x:x[1])
-        return [x[0] for x in list_k_neighbours[0:self.neighbours]]
+        return [x[0] for x in list_k_neighbours[0:self.neighbours]]  
         
-    def confusion_matrix(self):
+    def results(self, print_matrix=True):
         y_real = [point[-1] for point in self.datatest]
         y_pred = self.test()
         tp, fp, tn, fn = 0, 0, 0, 0
@@ -148,27 +152,55 @@ class knn():
                 tn += 1
             elif real and (not pred):
                 fn += 1
+        try:
+            sensitivity = tp / (tp + fn)
+            specificity = tn / (tn + fp)
+            accuracy = (tp + tn) / (tp + tn + fp + fn)
+            precision = tp / (tp + fp)
+            negative_predictive_value = tn / (tn + fn)
+        except:
+            pass
         
-        sensitivity = tp / (tp + fn)
-        specificity = tn / (tn + fp)
-        accuracy = (tp + tn) / (tp + tn + fp + fn)
-        precision = tp / (tp + fp)
-        negative_predictive_value = tn / (tn + fn)
+        if print_matrix:
+            print(f"{'Matriz de Confusão':^50}")
+            print()
+            print(f"{'True v Pred >':<15}|{'Positivo':^10}|{'Negativo':^10}")
+            print("-" * 37)
+            print(f"{'Positivo':<15}|{tp:^10}|{fn:^10}")
+            print("-" * 37)
+            print(f"{'Negativo':<15}|{fp:^10}|{tn:^10}")
+            print("-" * 37)
+            print(f"Sensitivity: {sensitivity:>20.2f}")
+            print(f"Specificity: {specificity:>20.2f}")
+            print(f"Precision: {precision:>22.2f}")
+            print(f"Negative Predictive Value: {negative_predictive_value:>6.2f}")
+            print(f"Accurrancy: {accuracy:>21.2f}")
+            print('\n' * 3)
         
-        print(f"{'Matriz de Confusão':^50}")
-        print()
-        print(f"{'True v Pred >':<15}|{'Positivo':^10}|{'Negativo':^10}")
-        print("-" * 37)
-        print(f"{'Positivo':<15}|{tp:^10}|{fn:^10}")
-        print("-" * 37)
-        print(f"{'Negativo':<15}|{fp:^10}|{tn:^10}")
-        print("-" * 37)
-        print(f"Sensitivity: {sensitivity:>20.2f}")
-        print(f"Specificity: {specificity:>20.2f}")
-        print(f"Precision: {precision:>22.2f}")
-        print(f"Negative Predictive Value: {negative_predictive_value:>6.2f}")
-        print(f"Accurrancy: {accuracy:>21.2f}")
-        print('\n' * 3)
+        return accuracy
+    
+    def fitting(self):
+        print("Começo do Fitting")
+        print('-'*150)
+        best_acc = 0
+        for percent_data in range(0,99,5):
+            percent_data = percent_data * 0.01
+            if percent_data != 0:
+                self.percent_data_train = percent_data
+                self.datatrain, self.datatest = self.divide_data(print_informations = False)
+                for neighbours in range(1,int(len(self.datatest)/2)):
+                    self.neighbours = neighbours
+                    acc = self.results(print_matrix=False)
+                    if best_acc <= acc:
+                        best_percent = self.percent_data_train
+                        best_acc = acc
+                        best_neighbours = self.neighbours
+                    
+                
+        print(f"O melhor valor de acurácia foi atingido com a divisão de dados com tamanho de {best_percent*100:.2f}% e quantidade de vizinhos igual á {best_neighbours}. \
+            A accurácia atingida foi de {best_acc*100:.2f}%")
+                
+            
         
             
                 
@@ -195,17 +227,18 @@ class knn():
 
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo, percent_data_train=0.7, neighbours= 7)
-print('Sem normalização!')
-print('-'*100)
-modelo_knn.test()
-modelo_knn.confusion_matrix()
-print('Normalização Min-Max')
-print('-'*100)
-modelo_knn.normalizacao()
-modelo_knn.test()
-modelo_knn.confusion_matrix()
-print('Normalização Zscore')
-print('-'*100)
-modelo_knn.normalizacao(type="zscore")
-modelo_knn.test()
-modelo_knn.confusion_matrix()
+modelo_knn.fitting()
+# print('Sem normalização!')
+# print('-'*100)
+# modelo_knn.test()
+# modelo_knn.confusion_matrix()
+# print('Normalização Min-Max')
+# print('-'*100)
+# modelo_knn.normalizacao()
+# modelo_knn.test()
+# modelo_knn.confusion_matrix()
+# print('Normalização Zscore')
+# print('-'*100)
+# modelo_knn.normalizacao(type="zscore")
+# modelo_knn.test()
+# modelo_knn.confusion_matrix()
