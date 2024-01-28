@@ -142,43 +142,55 @@ class knn():
     def results(self, print_matrix=True):
         y_real = [point[-1] for point in self.datatest]
         y_pred = self.test()
-        tp, fp, tn, fn = 0, 0, 0, 0
+        true_positive, false_positive, true_negative, false_negative = 0, 0, 0, 0
         #Verifica os Positivos Verdadeiros e Falsos e idem Negativos
         for real, pred in zip(y_real, y_pred):
             if real and pred:
-                tp += 1
+                true_positive += 1
             elif (not real) and pred:
-                fp += 1
+                false_positive += 1
             elif (not real) and (not pred):
-                tn += 1
+                true_negative += 1
             elif real and (not pred):
-                fn += 1
+                false_negative += 1
         try:
-            sensitivity = tp / (tp + fn)
-            specificity = tn / (tn + fp)
-            accuracy = (tp + tn) / (tp + tn + fp + fn)
-            precision = tp / (tp + fp)
-            negative_predictive_value = tn / (tn + fn)
+            sensitivity = true_positive / (true_positive + false_negative)
+            nfr = false_negative / (true_positive + false_negative)
+            specificity_positive = true_negative / (true_negative + false_positive)
+            specificity_negative = false_positive / (true_negative + false_positive)
+            accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
+            precision = true_positive / (true_positive + false_positive)
+            
+            negative_predictive_value = true_negative / (true_negative + false_positive)
         except:
-            pass
+            if true_positive == 0 and false_positive == 0:
+                precision = 0
+                sensitivity = true_positive / (true_positive + false_negative)
+                nfr = false_negative / (true_positive + false_negative)
+                specificity_positive = true_negative / (true_negative + false_positive)
+                specificity_negative = false_positive / (true_negative + false_positive)
+                accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
+                negative_predictive_value = true_negative / (true_negative + false_positive)
+            
         
         if print_matrix:
             print(f"{'Matriz de Confusão':^50}")
             print()
             print(f"{'True v Pred >':<15}|{'Positivo':^10}|{'Negativo':^10}")
             print("-" * 37)
-            print(f"{'Positivo':<15}|{tp:^10}|{fn:^10}")
+            print(f"{'Positivo':<15}|{true_positive:^10}|{false_negative:^10}")
             print("-" * 37)
-            print(f"{'Negativo':<15}|{fp:^10}|{tn:^10}")
+            print(f"{'Negativo':<15}|{false_positive:^10}|{true_negative:^10}")
             print("-" * 37)
-            print(f"Sensitivity: {sensitivity:>20.2f}")
-            print(f"Specificity: {specificity:>20.2f}")
-            print(f"Precision: {precision:>22.2f}")
-            print(f"Negative Predictive Value: {negative_predictive_value:>6.2f}")
-            print(f"Acurácia: {accuracy:>21.2f}")
-            print('\n' * 3)
-        
-        return accuracy
+            print(  f"Sensibilidade ou Recall (Taxa de verdadeiro positivos): {sensitivity*100:.2f} % \n"  
+                    f"Taxa de falso negativo: {nfr*100:.2f} %  \n"
+                    f"Especificidade Positiva (Taxa de verdadeiro negativo): {specificity_positive*100:.2f} %\n" 
+                    f"Especificidade Negativo (Taxa de falso positivo): {specificity_negative*100:.2f} %\n" 
+                    f"Precisão: {precision*100:.2f} %\n"
+                    f"Precisão Negativa: {negative_predictive_value*100:.2f} %\n" 
+                    f"Acurácia: {accuracy*100:.2f} %\n")
+            print('\n' * 2)
+        return sensitivity, nfr, specificity_positive, specificity_negative, precision, negative_predictive_value, accuracy
     
     def fitting(self):
         print("Começo do Fitting")
@@ -196,14 +208,14 @@ class knn():
                 if percent_data != 0:
                     self.percent_data_train = percent_data
                     self.datatrain, self.datatest = self.divide_data(print_informations = False)
-                    for neighbours in range(1,int(len(self.datatest)/2)):
+                    for neighbours in range(1,50):
                         self.neighbours = neighbours
                         print('|', end='')
                         for weight in range(2,10):
                             self.weight_euclidian = weight
                             print('.',end='')
-                            acc = self.results(print_matrix=False)
-                            if best_acc <= acc:
+                            *values, acc = self.results(print_matrix=False)
+                            if best_acc < acc:
                                 best_percent = self.percent_data_train
                                 best_acc = acc
                                 best_neighbours = self.neighbours
@@ -221,8 +233,26 @@ class knn():
             Divisão dos dados: {best_percent*100:.2f}% \n \
             Quantidade de vizinhos: {best_neighbours}. \n \
             Peso da distancia euclidiana: {best_weight} \n \
-            Tipo de normalização: {best_type} \n \
+            Tipo de normalização: {str_type} \n \
             A accurácia atingida foi de {best_acc*100:.2f}%")
+        
+        print('Com estes parâmetros, realizando novamente o código teremos ... ')
+        self.path_bd = self.path_bd
+        self.weight_euclidian = best_weight
+        self.neighbours = best_neighbours
+        self.percent_data_train = best_percent
+        self.database = tratamento_dados(self.path_bd)
+        if best_type == 1:
+            self.normalizacao()
+        elif best_type == 2:
+            self.normalizacao(type="zscore")
+            
+        self.points = transform_data_points(self.database)
+        self.datatrain, self.datatest = self.divide_data()
+        self.results()
+        
+        
+        
                 
             
         
@@ -255,7 +285,7 @@ modelo_knn.fitting()
 # print('Sem normalização!')
 # print('-'*100)
 # modelo_knn.test()
-# modelo_knn.confusion_matrix()
+# modelo_knn.results()
 # print('Normalização Min-Max')
 # print('-'*100)
 # modelo_knn.normalizacao()
