@@ -172,7 +172,7 @@ class knn():
                 accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
                 negative_predictive_value = true_negative / (true_negative + false_positive)
             
-        
+        #Se o print_matrix for verdadeiro printa a matriz de confusão
         if print_matrix:
             print(f"{'Matriz de Confusão':^50}")
             print()
@@ -196,24 +196,25 @@ class knn():
         print("Começo do Fitting")
         print('-'*150)
         best_acc = 0
+        # Type tem relação com os tipos de tratamento de valores, sem normalização, normalização min-max e zscore
         for type in range(2):
             self.database = tratamento_dados(self.path_bd)
             if type == 1:
                 self.database = self.normalizacao()
             elif type == 2:
                 self.database = self.normalizacao(type='zscore')
-            for percent_data in range(0,99,10):
+            # Varia a porcentagem dos dados que são divididos entre treino e teste
+            for percent_data in range(0,99,5):
                 percent_data = percent_data * 0.01
-                print('\n \n \n')
                 if percent_data != 0:
                     self.percent_data_train = percent_data
                     self.datatrain, self.datatest = self.divide_data(print_informations = False)
-                    for neighbours in range(1,50):
+                    # Varia a quantidade de vizinhos
+                    for neighbours in range(1,30):
                         self.neighbours = neighbours
-                        print('|', end='')
-                        for weight in range(2,10):
+                        # Varia o peso da distancia euclidiana
+                        for weight in range(2,5):
                             self.weight_euclidian = weight
-                            print('.',end='')
                             *values, acc = self.results(print_matrix=False)
                             if best_acc < acc:
                                 best_percent = self.percent_data_train
@@ -281,18 +282,21 @@ class knn():
 
 caminho_arquivo = 'bd\diabetes.csv'
 modelo_knn = knn(caminho_arquivo, percent_data_train=0.7, neighbours= 7)
+print('Sem normalização!')
+print('-'*100)
+modelo_knn.test()
+modelo_knn.results()
+print('Normalização Min-Max')
+print('-'*100)
+modelo_knn = knn(caminho_arquivo, percent_data_train=0.7, neighbours= 7)
+modelo_knn.normalizacao()
+modelo_knn.test()
+modelo_knn.results()
+print('Normalização Zscore')
+print('-'*100)
+modelo_knn.normalizacao(type="zscore")
+modelo_knn.test()
+modelo_knn.results()
+print('Sintonização')
+print('-'*100)
 modelo_knn.fitting()
-# print('Sem normalização!')
-# print('-'*100)
-# modelo_knn.test()
-# modelo_knn.results()
-# print('Normalização Min-Max')
-# print('-'*100)
-# modelo_knn.normalizacao()
-# modelo_knn.test()
-# modelo_knn.confusion_matrix()
-# print('Normalização Zscore')
-# print('-'*100)
-# modelo_knn.normalizacao(type="zscore")
-# modelo_knn.test()
-# modelo_knn.confusion_matrix()
